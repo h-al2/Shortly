@@ -1,0 +1,78 @@
+@model List<GetUrlVM>;
+
+@{
+    ViewData["Title"] = "All short links";
+}
+
+<div class="container">
+    <a class="btn btn-outline-success"
+        asp-controller="Home"
+        asp-action="Index">
+        Add New
+    </a>
+</div>
+
+<div class="container">
+    <table class="table table-stripped">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Original link</th>
+                <th scope="col">Shortened link</th>
+                <th scope="col">Number of clicks</th>
+                @if (User.IsInRole(Role.Admin))
+                {
+                    <th scope="col">User</th>
+                }
+                <th scope="col">Options</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach(var url in Model)
+            {
+                <tr>
+                    <td>@url.Id</td>
+                    <td>@url.OriginalLink</td>
+                    <td>
+                        @{
+                            var fullShortUrl = $"{Context.Request.Scheme}://{Context.Request.Host}/go/{url.ShortLink}";
+                        }
+                        <a href="@fullShortUrl" target="_blank">@fullShortUrl</a>
+                        <button class="btn btn-sm btn-outline-secondary ms-2 copy-btn" data-url="@fullShortUrl" title="Copy to clipboard">
+                            📋 Copy
+                        </button>
+                        <span class="copy-confirm text-success ms-1" style="display:none;">Copied!</span>
+                    </td>
+                    <td>@url.NrOfClicks</td>
+                    @if (User.IsInRole(Role.Admin))
+                    {
+                        <td>@(url.User != null ? url.User.FullName : "-")</td>
+                    }
+                    <td>
+                        <a class="btn btn-outline-danger" 
+                        asp-controller="Url" 
+                        asp-action="Remove"
+                        asp-route-id="@url.Id">
+                            Remove
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+<script>
+    document.querySelectorAll('.copy-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var url = this.getAttribute('data-url');
+            navigator.clipboard.writeText(url).then(() => {
+                var confirm = this.nextElementSibling;
+                confirm.style.display = 'inline';
+                setTimeout(() => confirm.style.display = 'none', 2000);
+            });
+        });
+    });
+</script>
+}
